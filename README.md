@@ -9,7 +9,7 @@
 
 <h2>Quick Start and Example</h2>
 <p>To start just "include HTTMultiParty" instead of "include HTTParty" into your client class.
-When you pass a query with an instance of a File as a value for a PUT or POST request, the wrapper will 
+When you pass a query with an instance of a File as a value for a PUT or POST request, the wrapper will
 use a bit of magic and multipart-post to execute a multipart upload:</p>
 
 <pre>
@@ -17,6 +17,8 @@ require 'httmultiparty'
 class SomeClient
   include HTTMultiParty
   base_uri 'http://localhost:3000'
+  # Useful if you are using rails, and want to use uploaded files without saving in disk first
+  extra_file_types [ActionDispatch::Http::UploadedFile]
 end
 
 response = SomeClient.post('/', :query => {

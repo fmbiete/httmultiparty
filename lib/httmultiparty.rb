@@ -5,11 +5,9 @@ require 'httparty'
 require 'net/http/post/multipart'
 
 module HTTMultiParty
-  TRANSFORMABLE_TYPES = [File, Tempfile, ActionDispatch::Http::UploadedFile]
-
   QUERY_STRING_NORMALIZER = Proc.new do |params|
     HTTMultiParty.flatten_params(params).map do |(k,v)|
-      [k, TRANSFORMABLE_TYPES.include?(v.class) ? HTTMultiParty.file_to_upload_io(v) : v]
+      [k, Basement.transformable_types.include?(v.class) ? HTTMultiParty.file_to_upload_io(v) : v]
     end
   end
 
@@ -71,6 +69,20 @@ module HTTMultiParty
   end
 
    module ClassMethods
+
+     def transformable_types
+       if @transformable_types.nil?
+         @transformable_types = [File, Tempfile]
+       else
+         @transformable_types
+       end
+     end
+
+     def extra_file_types(extra_types)
+       transformable_types
+       @transformable_types.concat(extra_types)
+     end
+
      def post(path, options={})
        method = Net::HTTP::Post
        options[:body] ||= options.delete(:query)
@@ -93,8 +105,8 @@ module HTTMultiParty
 
     private
       def hash_contains_files?(hash)
-        hash.is_a?(Hash) && HTTMultiParty.flatten_params(hash).select do |(k,v)| 
-          TRANSFORMABLE_TYPES.include?(v.class) || v.is_a?(UploadIO)
+        hash.is_a?(Hash) && HTTMultiParty.flatten_params(hash).select do |(k,v)|
+          transformable_types.include?(v.class) || v.is_a?(UploadIO)
         end.size > 0
       end
    end
